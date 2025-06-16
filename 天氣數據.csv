@@ -1,0 +1,45 @@
+import requests  # 引入 requests 模組，用於發送 HTTP 請求
+from bs4 import BeautifulSoup  # 引入 BeautifulSoup 模組，用於解析 HTML
+import pandas as pd  # 引入 pandas 模組，用於資料處理
+
+# 定義抓取天氣資料的函數
+def scrape_weather_data():
+    # 發送 GET 請求以取得網頁內容
+    resp = requests.get("https://www.cwa.gov.tw/V8/C/W/Observe/MOD/24hr/46692.html")
+    # 使用 BeautifulSoup 解析 HTML 內容
+    soup = BeautifulSoup(resp.text, 'html.parser')
+
+    data = []  # 初始化一個空列表，用於存儲抓取的資料
+    # 找到所有的 <tr> 標籤
+    for row in soup.find_all("tr"):
+        # 取得每行中的所有字串並去除多餘空白
+        row_data = list(row.stripped_strings)
+        # 如果這行有 14 個元素，表示是我們需要的資料
+        if len(row_data) == 14:
+            data.append([
+                row_data[0],  # 日期
+                row_data[1],  # 時間
+                row_data[2],  # 溫度
+                row_data[3],  # 濕度
+                row_data[4],  # 風向
+                row_data[5],  # 風速
+                row_data[6],  # 陣風
+                row_data[10], # 能見度
+                row_data[11], # 海平面氣壓
+            ])
+
+    # 定義欄位名稱
+    columns = ["日期", "時間", "溫度", "濕度", "風向", "風速", "陣風", "能見度", "海平面氣壓"]
+    # 使用 pandas 將資料轉換為 DataFrame
+    df = pd.DataFrame(data, columns=columns)
+    print(df)  # 打印 DataFrame
+    return df  # 返回 DataFrame
+
+if __name__ == "__main__":
+    df = scrape_weather_data()  # 呼叫 scrape_weather_data 函數
+    # 將 DataFrame 保存為 CSV 文件，指定編碼為 utf-8-sig
+    df.to_csv("weather_data.csv", index=False, encoding="utf-8-sig")
+    print("天氣資料已儲存至 weather_data.csv")
+
+    import pandas as pd  # 引入 pandas 模組，用於資料處理
+import pyodbc  # 引入 pyodbc 模組，用於與資料庫連接
